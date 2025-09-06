@@ -52,7 +52,16 @@ import com.example.testasgn.ui.docTheme.DocPatientsScreen
 import com.example.testasgn.ui.loginTheme.DoctorLoginScreen
 import com.example.testasgn.ui.loginTheme.UserLoginScreen
 import com.example.testasgn.ui.theme.BalooTypography
-import com.example.testasgn.ui.userTheme.UserHomeScreen
+import com.example.testasgn.ui.userTheme.AppointmentScreen
+import com.example.testasgn.ui.userTheme.Bill
+import com.example.testasgn.ui.userTheme.History
+import com.example.testasgn.ui.userTheme.Logout
+import com.example.testasgn.ui.userTheme.MedicalReminderScreen
+import com.example.testasgn.ui.userTheme.PersonalInfo
+import com.example.testasgn.ui.userTheme.Profile
+import com.example.testasgn.ui.userTheme.Screen
+import com.example.testasgn.ui.userTheme.Setting
+import com.example.testasgn.ui.userTheme.User_Menu
 import com.example.testasgn.ui.viewModel.SignUpViewModel
 
 enum class AppScreen {
@@ -184,9 +193,29 @@ fun MediConnectApp(
     navController: NavHostController = rememberNavController()
 ) {
     val backStackEntry by navController.currentBackStackEntryAsState()
-    val currentScreen = AppScreen.valueOf(
-        backStackEntry?.destination?.route ?: AppScreen.LoginSystem.name
-    )
+    val currentRoute = backStackEntry?.destination?.route ?: AppScreen.LoginSystem.name
+
+    // 修复路由检测逻辑
+    val currentScreen = remember(currentRoute) {
+        when (currentRoute) {
+            Screen.MainMenu.route -> AppScreen.UserSystem
+            Screen.Appointment.route -> AppScreen.UserSystem
+            Screen.MedicalReminder.route -> AppScreen.UserSystem
+            Screen.Profile.route -> AppScreen.UserSystem
+            Screen.PersonaInfo.route -> AppScreen.UserSystem
+            Screen.History.route -> AppScreen.UserSystem
+            Screen.Bill.route -> AppScreen.UserSystem
+            Screen.Setting.route -> AppScreen.UserSystem
+            Screen.Logout.route -> AppScreen.UserSystem
+            else -> {
+                try {
+                    AppScreen.valueOf(currentRoute)
+                } catch (e: IllegalArgumentException) {
+                    AppScreen.LoginSystem
+                }
+            }
+        }
+    }
 
     val signUpUiState by signUpViewModel.signUpUiState.collectAsState()
     var searchQuery by remember { mutableStateOf("") }
@@ -196,12 +225,11 @@ fun MediConnectApp(
             TopBarScreen(
                 currentScreen = currentScreen,
                 searchQuery = searchQuery,
-                onChangeSearchQuery = {searchQuery = it},
-                hasNavigate = {navController.navigate(it.name)}
+                onChangeSearchQuery = { searchQuery = it },
+                hasNavigate = { navController.navigate(it.name) }
             )
         }
     ) { innerPadding ->
-
         NavHost(
             navController = navController,
             startDestination = AppScreen.LoginSystem.name,
@@ -233,25 +261,30 @@ fun MediConnectApp(
                             if (errorMessage?.contains("IC") == true) {
                                 errorMessage = null
                             }
-                                     },
+                        },
                         onchangePwd = {
                             pwd = it
                             if (errorMessage?.contains("Error") == true) {
                                 errorMessage = null
                             }
-                                      },
+                        },
                         onLoginClick = {
                             errorMessage = null
+                            println("Login button clicked")
                             accViewModel.userLogin(ic, pwd) { success, message ->
+                                println("Login result: success=$success, message=$message")
                                 if (success) {
-                                    navController.navigate(AppScreen.UserSystem.name)
+                                    navController.navigate(Screen.MainMenu.route) {
+                                        popUpTo(AppScreen.LoginSystem.name) {
+                                            inclusive = true
+                                        }
+                                    }
                                 } else {
                                     errorMessage = message
                                     if (errorMessage?.contains("IC") == true) {
                                         ic = ""
                                         pwd = ""
-                                    }
-                                    else {
+                                    } else {
                                         pwd = ""
                                     }
                                 }
@@ -286,13 +319,13 @@ fun MediConnectApp(
                             if (errorMessage?.contains("ID") == true) {
                                 errorMessage = null
                             }
-                                     },
+                        },
                         onChangePwd = {
                             pwd = it
                             if (errorMessage?.contains("Error") == true) {
                                 errorMessage = null
                             }
-                                      },
+                        },
                         onForgetPwdClick = {},
                         onTurnUsersClick = {
                             navController.navigate(AppScreen.UserLogin.name)
@@ -350,7 +383,7 @@ fun MediConnectApp(
                             if (errorMessage?.contains("IC") == true) {
                                 errorMessage = null
                             }
-                                     },
+                        },
                         name = name,
                         onChangeName = {name = it},
                         email = email,
@@ -359,14 +392,14 @@ fun MediConnectApp(
                             if (errorMessage?.contains("Email") == true) {
                                 errorMessage = null
                             }
-                                        },
+                        },
                         phone = phone,
                         onChangePhone = {
                             phone = it
                             if (errorMessage?.contains("Phone") == true) {
                                 errorMessage = null
                             }
-                                        },
+                        },
                         read = read,
                         onChangeRead = {read = it},
                         errorMessage = errorMessage,
@@ -417,11 +450,11 @@ fun MediConnectApp(
                             if (errorMessage?.contains("Passwords do not match") == true) {
                                 errorMessage = null
                             }
-                                             },
+                        },
                         errorMessage = errorMessage,
                         onBackClick = {
                             navController.navigate(AppScreen.SignUpInfo.name)
-                                      },
+                        },
                         onConfirmClick = {
                             errorMessage = null
                             if (newPwd != confirmPwd) {
@@ -488,19 +521,35 @@ fun MediConnectApp(
 
             //UserPage
             navigation(
-                startDestination = AppScreen.UserHome.name,
+                startDestination = Screen.MainMenu.route,
                 route = AppScreen.UserSystem.name
             ){
-                //Home
-                composable(route = AppScreen.UserHome.name) {
-                    UserHomeScreen(
-                        modifier = modifier
-                            .fillMaxHeight(),
-                        chooseBar = currentScreen,
-                        onAppointmentClick = {},
-                        onProfileClick = {},
-                        onMedicalReminderClick = {}
-                    )
+                composable(route = Screen.MainMenu.route) {
+                    User_Menu(navController)
+                }
+                composable(route = Screen.Appointment.route) {
+                    AppointmentScreen(navController)
+                }
+                composable(route = Screen.MedicalReminder.route) {
+                    MedicalReminderScreen(navController)
+                }
+                composable(route = Screen.Profile.route) {
+                    Profile(navController)
+                }
+                composable(route = Screen.PersonaInfo.route) {
+                    PersonalInfo(navController)
+                }
+                composable(route = Screen.History.route) {
+                    History(navController)
+                }
+                composable(route = Screen.Bill.route) {
+                    Bill(navController)
+                }
+                composable(route = Screen.Setting.route) {
+                    Setting(navController)
+                }
+                composable(route = Screen.Logout.route) {
+                    Logout(navController)
                 }
             }
 
@@ -508,5 +557,3 @@ fun MediConnectApp(
         }
     }
 }
-
-
