@@ -51,7 +51,6 @@ fun Profile(navController: NavController) {
     val userViewModel: UserViewModel = viewModel()
     val personalInfo by userViewModel.personalInfo.collectAsState()
 
-    // 加载用户数据
     LaunchedEffect(Unit) {
         userViewModel.loadUserData()
     }

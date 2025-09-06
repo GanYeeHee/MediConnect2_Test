@@ -24,6 +24,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.internal.composableLambda
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -54,6 +55,7 @@ import com.example.testasgn.ui.loginTheme.UserLoginScreen
 import com.example.testasgn.ui.theme.BalooTypography
 import com.example.testasgn.ui.userTheme.AppointmentScreen
 import com.example.testasgn.ui.userTheme.Bill
+import com.example.testasgn.ui.userTheme.EditProfile
 import com.example.testasgn.ui.userTheme.History
 import com.example.testasgn.ui.userTheme.Logout
 import com.example.testasgn.ui.userTheme.MedicalReminderScreen
@@ -550,6 +552,9 @@ fun MediConnectApp(
                 }
                 composable(route = Screen.Logout.route) {
                     Logout(navController)
+                }
+                composable(route = Screen.EditProfile.route){
+                    EditProfile(navController)
                 }
             }
 

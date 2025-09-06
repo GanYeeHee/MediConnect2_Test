@@ -67,7 +67,10 @@ fun PersonalInfo(navController: NavController){
             Icon(
                 imageVector = Icons.Default.Edit,
                 contentDescription = "Edit",
-                modifier = Modifier.size(28.dp),
+                modifier = Modifier
+                    .size(28.dp)
+                    .clickable { navController.navigate(Screen.EditProfile.route) }
+                    ,
                 tint = Color.Black,
             )
 
