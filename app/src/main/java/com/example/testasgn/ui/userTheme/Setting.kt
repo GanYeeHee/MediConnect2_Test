@@ -140,7 +140,7 @@ fun Setting(navController: NavController) {
 
 @Composable
 fun TutorialDialog(onDismiss: () -> Unit) {
-    AlertDialog(
+    val alertDialog = AlertDialog(
         onDismissRequest = onDismiss,
         title = { Text("How to Use MediConnect") },
         text = {
@@ -168,7 +168,7 @@ fun TutorialDialog(onDismiss: () -> Unit) {
 
 @Composable
 fun AppInfoDialog(onDismiss: () -> Unit) {
-    AlertDialog(
+    val alertDialog = AlertDialog(
         onDismissRequest = onDismiss,
         title = { Text("App Information") },
         text = {
