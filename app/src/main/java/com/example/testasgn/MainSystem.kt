@@ -57,16 +57,12 @@ import com.example.testasgn.ui.userTheme.AppointmentScreen
 import com.example.testasgn.ui.userTheme.Bill
 import com.example.testasgn.ui.userTheme.EditProfile
 import com.example.testasgn.ui.userTheme.History
-import com.example.testasgn.ui.userTheme.LanguageSettingsScreen
 import com.example.testasgn.ui.userTheme.Logout
 import com.example.testasgn.ui.userTheme.MedicalReminderScreen
-import com.example.testasgn.ui.userTheme.NotificationSettingsScreen
 import com.example.testasgn.ui.userTheme.PersonalInfo
-import com.example.testasgn.ui.userTheme.PrivacyPolicyScreen
 import com.example.testasgn.ui.userTheme.Profile
 import com.example.testasgn.ui.userTheme.Screen
 import com.example.testasgn.ui.userTheme.Setting
-import com.example.testasgn.ui.userTheme.ShareAppScreen
 import com.example.testasgn.ui.userTheme.User_Menu
 import com.example.testasgn.ui.viewModel.SignUpViewModel
 
@@ -559,21 +555,6 @@ fun MediConnectApp(
                 }
                 composable(route = Screen.EditProfile.route){
                     EditProfile(navController)
-                }
-                composable(route = Screen.NotificationSettings.route) {
-                    NotificationSettingsScreen(navController)
-                }
-
-                composable(route = Screen.LanguageSettings.route) {
-                    LanguageSettingsScreen(navController)
-                }
-
-                composable(route = Screen.PrivacyPolicy.route) {
-                    PrivacyPolicyScreen(navController)
-                }
-
-                composable(route = Screen.ShareApp.route) {
-                    ShareAppScreen(navController)
                 }
             }
 

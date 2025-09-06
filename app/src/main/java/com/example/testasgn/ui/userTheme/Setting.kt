@@ -15,27 +15,35 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowForward
-import androidx.compose.material.icons.filled.Language
-import androidx.compose.material.icons.filled.Notifications
-import androidx.compose.material.icons.filled.PrivacyTip
+import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Share
+import androidx.compose.material.icons.filled.Book
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.material3.AlertDialog
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
+import android.content.Intent
+import androidx.compose.ui.tooling.preview.Preview
 
 @Composable
 fun Setting(navController: NavController) {
+    val context = LocalContext.current
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -67,30 +75,17 @@ fun Setting(navController: NavController) {
                 .fillMaxWidth()
                 .padding(horizontal = 16.dp)
         ) {
+            var showTutorialDialog by remember { mutableStateOf(false) }
             SettingItem(
-                icon = Icons.Default.Notifications,
-                title = "Notification Settings",
-                description = "Manage your notification preferences",
-                onClick = { navController.navigate(Screen.NotificationSettings.route) }
+                icon = Icons.Default.Book,
+                title = "User Guide",
+                description = "How to use the app",
+                onClick = { showTutorialDialog = true }
             )
 
-            Spacer(modifier = Modifier.height(12.dp))
-
-            SettingItem(
-                icon = Icons.Default.Language,
-                title = "Language",
-                description = "Change app language",
-                onClick = { navController.navigate(Screen.LanguageSettings.route) }
-            )
-
-            Spacer(modifier = Modifier.height(12.dp))
-
-            SettingItem(
-                icon = Icons.Default.PrivacyTip,
-                title = "Privacy Policy",
-                description = "View our privacy policy",
-                onClick = { navController.navigate(Screen.PrivacyPolicy.route) }
-            )
+            if (showTutorialDialog) {
+                TutorialDialog(onDismiss = { showTutorialDialog = false })
+            }
 
             Spacer(modifier = Modifier.height(12.dp))
 
@@ -98,14 +93,41 @@ fun Setting(navController: NavController) {
                 icon = Icons.Default.Share,
                 title = "Share App",
                 description = "Share with friends and family",
-                onClick = { navController.navigate(Screen.ShareApp.route) }
+                onClick = {
+                    val shareIntent = Intent(Intent.ACTION_SEND)
+                    shareIntent.type = "text/plain"
+                    shareIntent.putExtra(
+                        Intent.EXTRA_TEXT,
+                        "Check out MediConnect app - Your healthcare companion!"
+                    )
+                    context.startActivity(
+                        Intent.createChooser(
+                            shareIntent,
+                            "Share MediConnect"
+                        )
+                    )
+                }
             )
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            var showAppInfoDialog by remember { mutableStateOf(false) }
+            SettingItem(
+                icon = Icons.Default.Info,
+                title = "App Information",
+                description = "Version and app details",
+                onClick = { showAppInfoDialog = true }
+            )
+
+            if (showAppInfoDialog) {
+                AppInfoDialog(onDismiss = { showAppInfoDialog = false })
+            }
         }
 
         Spacer(modifier = Modifier.height(32.dp))
 
         Text(
-            text = "App Version: 1.0.0",
+            text = "Version 1.0.0",
             fontSize = 14.sp,
             color = Color.Gray,
             modifier = Modifier
@@ -114,6 +136,58 @@ fun Setting(navController: NavController) {
             textAlign = TextAlign.Center
         )
     }
+}
+
+@Composable
+fun TutorialDialog(onDismiss: () -> Unit) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("How to Use MediConnect") },
+        text = {
+            Column {
+                Text("1. 📅 Make appointments with doctors", fontWeight = FontWeight.Normal)
+                Spacer(modifier = Modifier.height(4.dp))
+                Text("2. ⏰ Set medical reminders", fontWeight = FontWeight.Normal)
+                Spacer(modifier = Modifier.height(4.dp))
+                Text("3. 👤 Manage your personal health profile", fontWeight = FontWeight.Normal)
+                Spacer(modifier = Modifier.height(4.dp))
+                Text("4. 📋 View your medical history", fontWeight = FontWeight.Normal)
+                Spacer(modifier = Modifier.height(8.dp))
+                Text("For more help, contact support.", fontSize = 14.sp, color = Color.Gray)
+            }
+        },
+        confirmButton = {
+            androidx.compose.material3.TextButton(
+                onClick = onDismiss
+            ) {
+                Text("Got it!")
+            }
+        }
+    )
+}
+
+@Composable
+fun AppInfoDialog(onDismiss: () -> Unit) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("App Information") },
+        text = {
+            Column {
+                Text("MediConnect v1.0.0", fontWeight = FontWeight.Bold)
+                Spacer(modifier = Modifier.height(8.dp))
+                Text("A healthcare companion app for managing your medical needs.")
+                Spacer(modifier = Modifier.height(8.dp))
+                Text("Developed as a student project.")
+            }
+        },
+        confirmButton = {
+            androidx.compose.material3.TextButton(
+                onClick = onDismiss
+            ) {
+                Text("OK")
+            }
+        }
+    )
 }
 
 @Composable

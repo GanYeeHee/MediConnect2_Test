@@ -11,8 +11,4 @@ sealed class Screen(val route: String) {
     object Setting : Screen("setting")
     object Logout : Screen("logout")
     object EditProfile : Screen ("edit profile")
-    object NotificationSettings : Screen("notification_settings")
-    object LanguageSettings : Screen("language_settings")
-    object PrivacyPolicy : Screen("privacy_policy")
-    object ShareApp : Screen("share_app")
 }
