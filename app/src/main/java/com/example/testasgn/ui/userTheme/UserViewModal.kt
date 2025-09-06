@@ -85,7 +85,8 @@ class UserViewModel : ViewModel() {
                             "phone" to updatedInfo.phone,
                             "medicalHistory" to updatedInfo.medicalHistory,
                             "weight" to updatedInfo.weight,
-                            "height" to updatedInfo.height
+                            "height" to updatedInfo.height,
+                            "ic" to updatedInfo.ic
                         )
                         db.collection("users").document(userDoc.id)
                             .update(updateData)
