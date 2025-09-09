@@ -213,7 +213,7 @@ fun SettingItem(
                 imageVector = icon,
                 contentDescription = title,
                 modifier = Modifier
-                    .size(24.dp)
+                    .size(35.dp)
                     .padding(end = 16.dp),
                 tint = Color(0xFF00C8B3)
             )
