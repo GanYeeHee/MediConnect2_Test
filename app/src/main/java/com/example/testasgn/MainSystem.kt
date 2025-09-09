@@ -197,7 +197,6 @@ fun MediConnectApp(
     val backStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = backStackEntry?.destination?.route ?: AppScreen.LoginSystem.name
 
-    // 修复路由检测逻辑
     val currentScreen = remember(currentRoute) {
         when (currentRoute) {
             Screen.MainMenu.route -> AppScreen.UserSystem
