@@ -18,7 +18,10 @@ import androidx.compose.material.icons.filled.ArrowForward
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material.icons.filled.Book
+import androidx.compose.material.icons.filled.Notifications
+import androidx.compose.material.icons.filled.NotificationImportant
 import androidx.compose.material3.Icon
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -39,10 +42,43 @@ import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import android.content.Intent
 import androidx.compose.ui.tooling.preview.Preview
+import android.app.NotificationChannel
+import android.app.NotificationManager
+import android.content.Context
+import android.content.SharedPreferences
+import android.os.Build
+import androidx.core.app.NotificationCompat
+import androidx.core.app.NotificationManagerCompat
+import android.Manifest
+import android.content.pm.PackageManager
+import androidx.core.content.ContextCompat
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.material3.SwitchDefaults
+
+private const val NOTIFICATION_CHANNEL_ID = "mediconnect_channel"
+private const val NOTIFICATION_CHANNEL_NAME = "MediConnect Notifications"
+private const val PREF_NAME = "mediconnect_prefs"
+private const val PREF_NOTIFICATIONS_ENABLED = "notifications_enabled"
 
 @Composable
 fun Setting(navController: NavController) {
     val context = LocalContext.current
+    val sharedPrefs = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE)
+    var notificationsEnabled by remember {
+        mutableStateOf(sharedPrefs.getBoolean(PREF_NOTIFICATIONS_ENABLED, true))
+    }
+
+    createNotificationChannel(context)
+
+    val requestPermissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission()
+    ) { isGranted: Boolean ->
+        if (!isGranted) {
+            notificationsEnabled = false
+            saveNotificationPreference(sharedPrefs, false)
+        }
+    }
 
     Column(
         modifier = Modifier
@@ -75,6 +111,50 @@ fun Setting(navController: NavController) {
                 .fillMaxWidth()
                 .padding(horizontal = 16.dp)
         ) {
+            SettingItemWithSwitch(
+                icon = Icons.Default.Notifications,
+                title = "Push Notifications",
+                description = "Enable app notifications",
+                isChecked = notificationsEnabled,
+                onCheckedChange = { isChecked ->
+                    if (isChecked) {
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                            if (ContextCompat.checkSelfPermission(
+                                    context,
+                                    Manifest.permission.POST_NOTIFICATIONS
+                                ) != PackageManager.PERMISSION_GRANTED
+                            ) {
+                                requestPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+                            } else {
+                                notificationsEnabled = isChecked
+                                saveNotificationPreference(sharedPrefs, isChecked)
+                            }
+                        } else {
+                            notificationsEnabled = isChecked
+                            saveNotificationPreference(sharedPrefs, isChecked)
+                        }
+                    } else {
+                        notificationsEnabled = isChecked
+                        saveNotificationPreference(sharedPrefs, isChecked)
+                    }
+                }
+            )
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            SettingItem(
+                icon = Icons.Default.NotificationImportant,
+                title = "Test Notification",
+                description = "Send a test notification",
+                onClick = {
+                    if (notificationsEnabled) {
+                        showTestNotification(context)
+                    }
+                }
+            )
+
+            Spacer(modifier = Modifier.height(12.dp))
+
             var showTutorialDialog by remember { mutableStateOf(false) }
             SettingItem(
                 icon = Icons.Default.Book,
@@ -139,8 +219,67 @@ fun Setting(navController: NavController) {
 }
 
 @Composable
+fun SettingItemWithSwitch(
+    icon: ImageVector,
+    title: String,
+    description: String,
+    isChecked: Boolean,
+    onCheckedChange: (Boolean) -> Unit
+) {
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(Color.White, RoundedCornerShape(12.dp))
+            .border(1.dp, Color(0xFFEEEEEE), RoundedCornerShape(12.dp))
+            .padding(16.dp)
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Icon(
+                imageVector = icon,
+                contentDescription = title,
+                modifier = Modifier
+                    .size(35.dp)
+                    .padding(end = 16.dp),
+                tint = Color(0xFF00C8B3)
+            )
+
+            Column(
+                modifier = Modifier.weight(1f)
+            ) {
+                Text(
+                    text = title,
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    color = Color.Black
+                )
+                Text(
+                    text = description,
+                    fontSize = 14.sp,
+                    color = Color.Gray,
+                    modifier = Modifier.padding(top = 4.dp)
+                )
+            }
+
+            Switch(
+                checked = isChecked,
+                onCheckedChange = onCheckedChange,
+                colors = SwitchDefaults.colors(
+                    checkedThumbColor = Color.White,
+                    checkedTrackColor = Color(0xFF00C8B3),
+                    uncheckedThumbColor = Color.White,
+                    uncheckedTrackColor = Color.Gray
+                )
+            )
+        }
+    }
+}
+
+@Composable
 fun TutorialDialog(onDismiss: () -> Unit) {
-    val alertDialog = AlertDialog(
+    AlertDialog(
         onDismissRequest = onDismiss,
         title = { Text("How to Use MediConnect") },
         text = {
@@ -168,7 +307,7 @@ fun TutorialDialog(onDismiss: () -> Unit) {
 
 @Composable
 fun AppInfoDialog(onDismiss: () -> Unit) {
-    val alertDialog = AlertDialog(
+    AlertDialog(
         onDismissRequest = onDismiss,
         title = { Text("App Information") },
         text = {
@@ -243,6 +382,55 @@ fun SettingItem(
             )
         }
     }
+}
+
+private fun createNotificationChannel(context: Context) {
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+        val importance = NotificationManager.IMPORTANCE_HIGH
+        val channel = NotificationChannel(
+            NOTIFICATION_CHANNEL_ID,
+            NOTIFICATION_CHANNEL_NAME,
+            importance
+        ).apply {
+            description = "Notifications for MediConnect app"
+        }
+
+        val notificationManager: NotificationManager =
+            context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+        notificationManager.createNotificationChannel(channel)
+    }
+}
+
+private fun showTestNotification(context: Context) {
+    try {
+        val builder = NotificationCompat.Builder(context, NOTIFICATION_CHANNEL_ID)
+            .setSmallIcon(android.R.drawable.ic_dialog_info)
+            .setContentTitle("MediConnect Test")
+            .setContentText("This is a test notification! 🔔")
+            .setPriority(NotificationCompat.PRIORITY_HIGH)
+            .setAutoCancel(true)
+
+        with(NotificationManagerCompat.from(context)) {
+            if (ContextCompat.checkSelfPermission(
+                    context,
+                    Manifest.permission.POST_NOTIFICATIONS
+                ) == PackageManager.PERMISSION_GRANTED ||
+                Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
+                notify(1001, builder.build())
+            }
+        }
+    } catch (e: SecurityException) {
+        // Handle permission denial
+    }
+}
+
+private fun saveNotificationPreference(sharedPrefs: SharedPreferences, enabled: Boolean) {
+    sharedPrefs.edit().putBoolean(PREF_NOTIFICATIONS_ENABLED, enabled).apply()
+}
+
+fun isNotificationsEnabled(context: Context): Boolean {
+    val sharedPrefs = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE)
+    return sharedPrefs.getBoolean(PREF_NOTIFICATIONS_ENABLED, true)
 }
 
 @Preview(showBackground = true)
