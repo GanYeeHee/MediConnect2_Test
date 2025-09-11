@@ -167,7 +167,6 @@ fun AppointmentScreen(navController: NavController) {
                             SpecialtyCard(
                                 specialty = specialty,
                                 onClick = {
-                                    // 修改這裡：使用 Screen.DoctorList 路由
                                     navController.navigate(Screen.DoctorList.createRoute(specialty.name))
                                 }
                             )
@@ -175,7 +174,6 @@ fun AppointmentScreen(navController: NavController) {
                     }
                 }
 
-                // 底部導航欄保持不變
                 Box(
                     modifier = Modifier
                         .height(70.dp)
