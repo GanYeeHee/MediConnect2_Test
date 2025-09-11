@@ -55,6 +55,7 @@ import com.example.testasgn.ui.loginTheme.UserLoginScreen
 import com.example.testasgn.ui.theme.BalooTypography
 import com.example.testasgn.ui.userTheme.AppointmentScreen
 import com.example.testasgn.ui.userTheme.Bill
+import com.example.testasgn.ui.userTheme.DoctorListScreen
 import com.example.testasgn.ui.userTheme.EditProfile
 import com.example.testasgn.ui.userTheme.History
 import com.example.testasgn.ui.userTheme.Logout
@@ -555,6 +556,17 @@ fun MediConnectApp(
                 composable(route = Screen.EditProfile.route){
                     EditProfile(navController)
                 }
+                composable(route = Screen.DoctorList.route) { backStackEntry ->
+                    val specialty = backStackEntry.arguments?.getString("specialty") ?: ""
+                    DoctorListScreen(
+                        navController = navController,
+                        specialty = specialty,
+                        onDoctorSelected = { doctor ->
+                            println("Selected doctor: ${doctor.name}")
+                        }
+                    )
+                }
+
             }
 
 

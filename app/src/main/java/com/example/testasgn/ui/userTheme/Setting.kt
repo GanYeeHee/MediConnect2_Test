@@ -424,6 +424,7 @@ private fun showTestNotification(context: Context) {
     }
 }
 
+
 private fun saveNotificationPreference(sharedPrefs: SharedPreferences, enabled: Boolean) {
     sharedPrefs.edit().putBoolean(PREF_NOTIFICATIONS_ENABLED, enabled).apply()
 }
