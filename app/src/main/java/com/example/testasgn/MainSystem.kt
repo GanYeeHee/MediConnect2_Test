@@ -64,7 +64,9 @@ import com.example.testasgn.ui.userTheme.PersonalInfo
 import com.example.testasgn.ui.userTheme.Profile
 import com.example.testasgn.ui.userTheme.Screen
 import com.example.testasgn.ui.userTheme.Setting
+import com.example.testasgn.ui.userTheme.SimplePaginationBar
 import com.example.testasgn.ui.userTheme.User_Menu
+import com.example.testasgn.ui.userTheme.sampleDoctors
 import com.example.testasgn.ui.viewModel.SignUpViewModel
 
 enum class AppScreen {
@@ -566,10 +568,7 @@ fun MediConnectApp(
                         }
                     )
                 }
-
             }
-
-
         }
     }
 }

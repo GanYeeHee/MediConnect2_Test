@@ -98,6 +98,14 @@ fun DoctorListScreen(
     onDoctorSelected: (Doctor) -> Unit = {}
 ) {
     val filteredDoctors = sampleDoctors.filter { it.specialty == specialty }
+    var currentPage by remember { mutableStateOf(1) }
+    val itemsPerPage = 5
+    val totalPages = ceil(filteredDoctors.size.toDouble() / itemsPerPage).toInt().coerceAtLeast(1)
+
+    // 计算当前页显示的医生
+    val paginatedDoctors = filteredDoctors
+        .drop((currentPage - 1) * itemsPerPage)
+        .take(itemsPerPage)
 
     Scaffold(
         topBar = {
@@ -204,10 +212,12 @@ fun DoctorListScreen(
                     verticalArrangement = Arrangement.spacedBy(12.dp),
                     modifier = Modifier.weight(1f)
                 ) {
-                    items(filteredDoctors) { doctor ->
+                    items(paginatedDoctors) { doctor -> // 使用分页后的数据
                         DoctorCard(
                             doctor = doctor,
-                            onSelect = { onDoctorSelected(doctor) }
+                            onSelect = {
+                                onDoctorSelected(doctor)
+                            }
                         )
                     }
                 }
@@ -216,10 +226,12 @@ fun DoctorListScreen(
             Spacer(Modifier.height(12.dp))
 
             if (filteredDoctors.isNotEmpty()) {
-                PaginationBar(
-                    totalPages = ceil(filteredDoctors.size / 5.0).toInt(), // 每頁5個醫生
-                    currentPage = 1,
-                    onPageClick = {}
+                SimplePaginationBar(
+                    totalPages = totalPages,
+                    currentPage = currentPage,
+                    onPageClick = { page ->
+                        currentPage = page
+                    }
                 )
             }
         }
@@ -227,144 +239,41 @@ fun DoctorListScreen(
 }
 
 @Composable
-fun DoctorCard(
-    doctor: Doctor,
-    onSelect: () -> Unit
-) {
-    Card(
-        modifier = Modifier
-            .fillMaxWidth(),
-        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
-        shape = RoundedCornerShape(12.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White)
-    ) {
-        Column(
-            modifier = Modifier.padding(16.dp)
-        ) {
-            Row(
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Icon(
-                    imageVector = Icons.Default.AccountCircle,
-                    contentDescription = "Doctor Avatar",
-                    modifier = Modifier.size(60.dp),
-                    tint = Color(0xFF00C8B3)
-                )
+fun SimplePaginationBar(totalPages: Int, currentPage: Int, onPageClick: (Int) -> Unit) {
+    // 确保至少有1页
+    if (totalPages <= 0) return
 
-                Spacer(Modifier.width(16.dp))
-
-                Column(
-                    modifier = Modifier.weight(1f)
-                ) {
-                    Text(
-                        doctor.name,
-                        style = MaterialTheme.typography.titleMedium.copy(
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 18.sp
-                        ),
-                        color = Color(0xFF333333)
-                    )
-
-                    Spacer(Modifier.height(4.dp))
-
-                    Text(
-                        "Specialty: ${doctor.specialty}",
-                        style = MaterialTheme.typography.bodyMedium.copy(
-                            color = Color(0xFF666666),
-                            fontSize = 14.sp
-                        )
-                    )
-
-                    Spacer(Modifier.height(4.dp))
-
-                    Text(
-                        "Languages: ${doctor.languages.joinToString(", ")}",
-                        style = MaterialTheme.typography.bodyMedium.copy(
-                            color = Color(0xFF666666),
-                            fontSize = 14.sp
-                        )
-                    )
-
-                    Spacer(Modifier.height(4.dp))
-
-                    Text(
-                        "Rating: ${doctor.rating}/5.0",
-                        style = MaterialTheme.typography.bodyMedium.copy(
-                            color = Color(0xFF666666),
-                            fontSize = 14.sp
-                        )
-                    )
-                }
-
-                IconButton(
-                    onClick = { /* TODO: Show doctor info */ },
-                    modifier = Modifier.size(40.dp)
-                ) {
-                    Icon(
-                        Icons.Default.Info,
-                        contentDescription = "Info",
-                        tint = Color(0xFF00C8B3)
-                    )
-                }
-            }
-
-            Spacer(Modifier.height(16.dp))
-
-            Divider(
-                color = Color.LightGray.copy(alpha = 0.5f),
-                thickness = 1.dp,
-                modifier = Modifier.fillMaxWidth()
-            )
-
-            Spacer(Modifier.height(12.dp))
-
-            Button(
-                onClick = onSelect,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(48.dp),
-                shape = RoundedCornerShape(8.dp),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = Color(0xFF00C8B3)
-                )
-            ) {
-                Text(
-                    "Select Date",
-                    style = MaterialTheme.typography.bodyMedium.copy(
-                        fontWeight = FontWeight.Bold,
-                        color = Color.White
-                    )
-                )
-            }
-        }
-    }
-}
-
-@Composable
-fun PaginationBar(totalPages: Int, currentPage: Int, onPageClick: (Int) -> Unit) {
     Row(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.Center
     ) {
-        repeat(totalPages) { index ->
-            val page = index + 1
-            OutlinedButton(
+        // 即使只有1页也显示页码
+        for (page in 1..totalPages) {
+            Button(
                 onClick = { onPageClick(page) },
-                modifier = Modifier.size(40.dp),
+                modifier = Modifier
+                    .size(40.dp)
+                    .padding(horizontal = 4.dp),
                 shape = RoundedCornerShape(8.dp),
-                colors = if (page == currentPage)
-                    ButtonDefaults.outlinedButtonColors(
+                colors = if (page == currentPage) {
+                    ButtonDefaults.buttonColors(
                         containerColor = Color(0xFF00C8B3),
                         contentColor = Color.White
                     )
-                else
-                    ButtonDefaults.outlinedButtonColors(
+                } else {
+                    ButtonDefaults.buttonColors(
                         containerColor = Color.Transparent,
                         contentColor = Color(0xFF00C8B3)
-                    ),
-                border = BorderStroke(
-                    1.dp,
-                    if (page == currentPage) Color.Transparent else Color(0xFF00C8B3)
+                    )
+                },
+                border = if (page != currentPage) {
+                    BorderStroke(1.dp, Color(0xFF00C8B3))
+                } else {
+                    null
+                },
+                elevation = ButtonDefaults.buttonElevation(
+                    defaultElevation = 0.dp,
+                    pressedElevation = 0.dp
                 )
             ) {
                 Text(
@@ -374,7 +283,6 @@ fun PaginationBar(totalPages: Int, currentPage: Int, onPageClick: (Int) -> Unit)
                     )
                 )
             }
-            Spacer(Modifier.width(8.dp))
         }
     }
 }

@@ -14,9 +14,12 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Accessibility
@@ -24,9 +27,12 @@ import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Bloodtype
 import androidx.compose.material.icons.filled.CameraAlt
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.MedicalServices
 import androidx.compose.material.icons.filled.ChildCare
@@ -36,13 +42,17 @@ import androidx.compose.material.icons.filled.Science
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.Divider
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
@@ -54,34 +64,99 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
+import kotlin.random.Random
 
 data class Specialty(
+    val id: String,
     val name: String,
     val icon: ImageVector
 )
 
 val specialties = listOf(
-    Specialty("Surgery", Icons.Default.Healing),
-    Specialty("Internal Medicine", Icons.Default.MedicalServices),
-    Specialty("Neurology", Icons.Default.AccountCircle),
-    Specialty("Radiology", Icons.Default.CameraAlt),
-    Specialty("Pediatrics", Icons.Default.ChildCare),
-    Specialty("Orthopaedic", Icons.Default.Accessibility),
-    Specialty("Urology", Icons.Default.Person),
-    Specialty("Dermatology", Icons.Default.Face),
-    Specialty("Hematology", Icons.Default.Bloodtype),
-    Specialty("Endocrinology", Icons.Default.Science)
+    Specialty("surgery", "Surgery", Icons.Default.Healing),
+    Specialty("internal_medicine", "Internal Medicine", Icons.Default.MedicalServices),
+    Specialty("neurology", "Neurology", Icons.Default.AccountCircle),
+    Specialty("radiology", "Radiology", Icons.Default.CameraAlt),
+    Specialty("pediatrics", "Pediatrics", Icons.Default.ChildCare),
+    Specialty("orthopaedic", "Orthopaedic", Icons.Default.Accessibility),
+    Specialty("urology", "Urology", Icons.Default.Person),
+    Specialty("dermatology", "Dermatology", Icons.Default.Face),
+    Specialty("hematology", "Hematology", Icons.Default.Bloodtype),
+    Specialty("endocrinology", "Endocrinology", Icons.Default.Science)
 )
+
+// 添加一个枚举类来表示当前显示的视图状态
+enum class ViewState {
+    SPECIALTIES, // 显示专业卡片
+    DOCTORS      // 显示医生卡片
+}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AppointmentScreen(navController: NavController) {
+    var query by remember { mutableStateOf("") }
+    var currentViewState by remember { mutableStateOf(ViewState.SPECIALTIES) }
+    var doctorQuery by remember { mutableStateOf("") }
+
+    // 根据搜索查询过滤专业列表
+    val filteredSpecialties = remember(query) {
+        if (query.isBlank()) {
+            specialties
+        } else {
+            specialties.filter { specialty ->
+                specialty.name.contains(query, ignoreCase = true)
+            }
+        }
+    }
+
+    // 随机排列医生列表
+    val shuffledDoctors = remember { sampleDoctors.shuffled() }
+
+    // 根据搜索查询过滤医生列表
+    val filteredDoctors = remember(doctorQuery) {
+        if (doctorQuery.isBlank()) {
+            shuffledDoctors
+        } else {
+            shuffledDoctors.filter { doctor ->
+                doctor.name.contains(doctorQuery, ignoreCase = true) ||
+                        doctor.specialty.contains(doctorQuery, ignoreCase = true) ||
+                        doctor.languages.any { it.contains(doctorQuery, ignoreCase = true) }
+            }
+        }
+    }
+
+    // 处理专业按钮点击
+    val onSpecialtyButtonClick = {
+        currentViewState = ViewState.SPECIALTIES
+        query = "" // 清空搜索框
+    }
+
+    // 处理医生按钮点击
+    val onDoctorButtonClick = {
+        currentViewState = ViewState.DOCTORS
+        doctorQuery = "" // 清空医生搜索框
+    }
+
+    // 处理专业卡片点击 - 导航到该专业的医生列表
+    val onSpecialtyCardClick = { specialty: Specialty ->
+        currentViewState = ViewState.DOCTORS
+        doctorQuery = specialty.name // 自動填入專業，讓下方filter啟動
+    }
+
+    // 处理医生选择
+    val onDoctorSelected = { doctor: Doctor ->
+        // 这里可以处理医生选择逻辑，比如导航到预约页面
+        navController.navigate(Screen.DoctorListScreen.route)
+    }
+
     Scaffold(
         topBar = {
             TopAppBar(
@@ -89,7 +164,8 @@ fun AppointmentScreen(navController: NavController) {
                     Text(
                         text = "Make Appointment",
                         color = Color.White,
-                        fontSize = 20.sp
+                        fontSize = 20.sp,
+                        fontWeight = FontWeight.Bold
                     )
                 },
                 navigationIcon = {
@@ -119,61 +195,243 @@ fun AppointmentScreen(navController: NavController) {
                         .weight(1f)
                         .padding(16.dp)
                 ) {
-                    var query by remember { mutableStateOf("") }
-                    OutlinedTextField(
-                        value = query,
-                        onValueChange = { query = it },
-                        modifier = Modifier.fillMaxWidth(),
-                        placeholder = { Text("Search by specialty, doctor") },
-                        leadingIcon = { Icon(Icons.Default.Search, contentDescription = "Search") }
-                    )
-
-                    Spacer(modifier = Modifier.height(16.dp))
-
+                    // 按钮行
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceEvenly
                     ) {
+                        // 专业按钮
                         Button(
-                            onClick = { /* TODO: Specialty filter */ },
-                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF00C8B3))
+                            onClick = onSpecialtyButtonClick,
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = if (currentViewState == ViewState.SPECIALTIES) {
+                                    Color(0xFF00C8B3)
+                                } else {
+                                    Color.White
+                                }
+                            )
                         ) {
-                            Text("Specialty", color = Color.White)
+                            Text(
+                                "Specialty",
+                                color = if (currentViewState == ViewState.SPECIALTIES) {
+                                    Color.White
+                                } else {
+                                    Color.DarkGray
+                                }
+                            )
                         }
+
+                        // 医生按钮
                         Button(
-                            onClick = { /* TODO: Doctor filter */ },
-                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF00C8B3))
+                            modifier = Modifier.border(1.dp, Color(0xFF00C8B3), RoundedCornerShape(40.dp)),
+                            onClick = onDoctorButtonClick,
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = if (currentViewState == ViewState.DOCTORS) {
+                                    Color(0xFF00C8B3)
+                                } else {
+                                    Color.White
+                                }
+                            )
                         ) {
-                            Text("Doctor", color = Color.White)
+                            Text(
+                                "Doctor",
+                                color = if (currentViewState == ViewState.DOCTORS) {
+                                    Color.White
+                                } else {
+                                    Color.DarkGray
+                                }
+                            )
                         }
                     }
 
                     Spacer(modifier = Modifier.height(24.dp))
 
-                    Text(
-                        text = "Select Specialty",
-                        style = MaterialTheme.typography.titleMedium,
-                        modifier = Modifier.padding(bottom = 8.dp),
-                        color = Color.Black
-                    )
-
-                    LazyVerticalGrid(
-                        columns = GridCells.Fixed(2),
-                        modifier = Modifier.weight(1f),
-                        verticalArrangement = Arrangement.spacedBy(12.dp),
-                        horizontalArrangement = Arrangement.spacedBy(12.dp)
-                    ) {
-                        items(specialties) { specialty ->
-                            SpecialtyCard(
-                                specialty = specialty,
-                                onClick = {
-                                    navController.navigate(Screen.DoctorList.createRoute(specialty.name))
+                    // 根据当前视图状态显示不同内容
+                    when (currentViewState) {
+                        ViewState.SPECIALTIES -> {
+                            // 专业搜索框
+                            OutlinedTextField(
+                                value = query,
+                                onValueChange = { query = it },
+                                modifier = Modifier.fillMaxWidth(),
+                                placeholder = { Text("Search by specialty") },
+                                leadingIcon = {
+                                    Icon(
+                                        Icons.Default.Search,
+                                        contentDescription = "Search",
+                                        tint = Color(0xFF00C8B3)
+                                    )
+                                },
+                                trailingIcon = {
+                                    if (query.isNotBlank()) {
+                                        IconButton(onClick = { query = "" }) {
+                                            Icon(
+                                                Icons.Default.Close,
+                                                contentDescription = "Clear search",
+                                                tint = Color.Gray
+                                            )
+                                        }
+                                    }
                                 }
                             )
+
+                            Spacer(modifier = Modifier.height(16.dp))
+
+                            // 显示搜索信息
+                            if (query.isNotBlank()) {
+                                Text(
+                                    text = "Search results for \"$query\" (${filteredSpecialties.size} found)",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    modifier = Modifier.padding(bottom = 8.dp),
+                                    color = Color.Gray
+                                )
+                            } else {
+                                Text(
+                                    text = "Select Specialty",
+                                    style = MaterialTheme.typography.titleMedium,
+                                    modifier = Modifier.padding(bottom = 8.dp),
+                                    color = Color.Black
+                                )
+                            }
+
+                            // 专业卡片网格
+                            if (filteredSpecialties.isEmpty() && query.isNotBlank()) {
+                                // 无搜索结果
+                                Column(
+                                    modifier = Modifier
+                                        .fillMaxSize()
+                                        .padding(32.dp),
+                                    horizontalAlignment = Alignment.CenterHorizontally,
+                                    verticalArrangement = Arrangement.Center
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.Search,
+                                        contentDescription = "No results",
+                                        modifier = Modifier.size(48.dp),
+                                        tint = Color.LightGray
+                                    )
+                                    Spacer(modifier = Modifier.height(16.dp))
+                                    Text(
+                                        text = "No specialties found for \"$query\"",
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        color = Color.Gray,
+                                        textAlign = TextAlign.Center
+                                    )
+                                    Text(
+                                        text = "Try a different search term",
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = Color.LightGray,
+                                        textAlign = TextAlign.Center
+                                    )
+                                }
+                            } else {
+                                LazyVerticalGrid(
+                                    columns = GridCells.Fixed(2),
+                                    modifier = Modifier.weight(1f),
+                                    verticalArrangement = Arrangement.spacedBy(12.dp),
+                                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                                ) {
+                                    items(filteredSpecialties) { specialty ->
+                                        SpecialtyCard(
+                                            specialty = specialty,
+                                            onClick = { onSpecialtyCardClick(specialty) }
+                                        )
+                                    }
+                                }
+                            }
+                        }
+
+                        ViewState.DOCTORS -> {
+                            // 医生搜索框
+                            OutlinedTextField(
+                                value = doctorQuery,
+                                onValueChange = { doctorQuery = it },
+                                modifier = Modifier.fillMaxWidth(),
+                                placeholder = { Text("Search by doctor name, specialty or languages") },
+                                leadingIcon = {
+                                    Icon(
+                                        Icons.Default.Search,
+                                        contentDescription = "Search",
+                                        tint = Color(0xFF00C8B3)
+                                    )
+                                },
+                                trailingIcon = {
+                                    if (doctorQuery.isNotBlank()) {
+                                        IconButton(onClick = { doctorQuery = "" }) {
+                                            Icon(
+                                                Icons.Default.Close,
+                                                contentDescription = "Clear search",
+                                                tint = Color.Gray
+                                            )
+                                        }
+                                    }
+                                }
+                            )
+
+                            Spacer(modifier = Modifier.height(16.dp))
+
+                            // 显示医生搜索结果信息
+                            if (doctorQuery.isNotBlank()) {
+                                Text(
+                                    text = "Search results for \"$doctorQuery\" (${filteredDoctors.size} found)",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    modifier = Modifier.padding(bottom = 8.dp),
+                                    color = Color.Gray
+                                )
+                            } else {
+                                Text(
+                                    text = "Available Doctors",
+                                    style = MaterialTheme.typography.titleMedium,
+                                    modifier = Modifier.padding(bottom = 8.dp),
+                                    color = Color.Black
+                                )
+                            }
+
+                            // 医生列表
+                            if (filteredDoctors.isEmpty()) {
+                                Column(
+                                    modifier = Modifier
+                                        .fillMaxSize()
+                                        .padding(32.dp),
+                                    horizontalAlignment = Alignment.CenterHorizontally,
+                                    verticalArrangement = Arrangement.Center
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.Search,
+                                        contentDescription = "No doctors",
+                                        modifier = Modifier.size(48.dp),
+                                        tint = Color.LightGray
+                                    )
+                                    Spacer(modifier = Modifier.height(16.dp))
+                                    Text(
+                                        text = if (doctorQuery.isNotBlank()) {
+                                            "No doctors found for \"$doctorQuery\""
+                                        } else {
+                                            "No doctors available"
+                                        },
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        color = Color.Gray,
+                                        textAlign = TextAlign.Center
+                                    )
+                                }
+                            } else {
+                                LazyColumn(
+                                    verticalArrangement = Arrangement.spacedBy(12.dp),
+                                    modifier = Modifier.weight(1f)
+                                ) {
+                                    items(filteredDoctors) { doctor ->
+                                        DoctorCard(
+                                            doctor = doctor,
+                                            onSelect = { onDoctorSelected(doctor) }
+                                        )
+                                    }
+                                }
+                            }
                         }
                     }
                 }
 
+                // 底部导航栏保持不变
                 Box(
                     modifier = Modifier
                         .height(70.dp)
@@ -257,14 +515,17 @@ fun SpecialtyCard(
             .height(100.dp)
             .clickable(onClick = onClick),
         border = BorderStroke(1.dp, Color(0xFF00C8B3)),
-        shape = RoundedCornerShape(12.dp)
+        shape = RoundedCornerShape(12.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = Color.White
+        )
     ) {
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center,
             modifier = Modifier
                 .fillMaxSize()
-                .padding(8.dp)
+                .padding(8.dp),
         ) {
             Icon(
                 imageVector = specialty.icon,
@@ -278,8 +539,124 @@ fun SpecialtyCard(
                 style = MaterialTheme.typography.bodyMedium,
                 fontSize = 14.sp,
                 textAlign = TextAlign.Center,
-                color = Color.Black
+                color = Color.Black,
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis
             )
+        }
+    }
+}
+
+@Composable
+fun DoctorCard(
+    doctor: Doctor,
+    onSelect: () -> Unit
+) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth(),
+        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
+        shape = RoundedCornerShape(12.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.White)
+    ) {
+        Column(
+            modifier = Modifier.padding(16.dp)
+        ) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Icon(
+                    imageVector = Icons.Default.AccountCircle,
+                    contentDescription = "Doctor Avatar",
+                    modifier = Modifier.size(60.dp),
+                    tint = Color(0xFF00C8B3)
+                )
+
+                Spacer(Modifier.width(16.dp))
+
+                Column(
+                    modifier = Modifier.weight(1f)
+                ) {
+                    Text(
+                        doctor.name,
+                        style = MaterialTheme.typography.titleMedium.copy(
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 18.sp
+                        ),
+                        color = Color(0xFF333333)
+                    )
+
+                    Spacer(Modifier.height(4.dp))
+
+                    Text(
+                        "Specialty: ${doctor.specialty}",
+                        style = MaterialTheme.typography.bodyMedium.copy(
+                            color = Color(0xFF666666),
+                            fontSize = 14.sp
+                        )
+                    )
+
+                    Spacer(Modifier.height(4.dp))
+
+                    Text(
+                        "Languages: ${doctor.languages.joinToString(", ")}",
+                        style = MaterialTheme.typography.bodyMedium.copy(
+                            color = Color(0xFF666666),
+                            fontSize = 14.sp
+                        )
+                    )
+
+                    Spacer(Modifier.height(4.dp))
+
+                    Text(
+                        "Rating: ${doctor.rating}/5.0",
+                        style = MaterialTheme.typography.bodyMedium.copy(
+                            color = Color(0xFF666666),
+                            fontSize = 14.sp
+                        )
+                    )
+                }
+
+                IconButton(
+                    onClick = { /* TODO: Show doctor info */ },
+                    modifier = Modifier.size(40.dp)
+                ) {
+                    Icon(
+                        Icons.Default.Info,
+                        contentDescription = "Info",
+                        tint = Color(0xFF00C8B3)
+                    )
+                }
+            }
+
+            Spacer(Modifier.height(16.dp))
+
+            Divider(
+                color = Color.LightGray.copy(alpha = 0.5f),
+                thickness = 1.dp,
+                modifier = Modifier.fillMaxWidth()
+            )
+
+            Spacer(Modifier.height(12.dp))
+
+            Button(
+                onClick = onSelect,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(48.dp),
+                shape = RoundedCornerShape(8.dp),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = Color(0xFF00C8B3)
+                )
+            ) {
+                Text(
+                    "Select Date",
+                    style = MaterialTheme.typography.bodyMedium.copy(
+                        fontWeight = FontWeight.Bold,
+                        color = Color.White
+                    )
+                )
+            }
         }
     }
 }
