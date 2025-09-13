@@ -15,4 +15,5 @@ sealed class Screen(val route: String) {
         fun createRoute(specialty: String) = "doctor_list/$specialty"
     }
     object DoctorListScreen : Screen("doctor lidt")
+    object ConfirmBookingScreen : Screen("confirm")
 }

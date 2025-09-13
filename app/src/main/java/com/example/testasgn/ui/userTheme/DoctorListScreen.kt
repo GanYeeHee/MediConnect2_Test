@@ -212,12 +212,10 @@ fun DoctorListScreen(
                     verticalArrangement = Arrangement.spacedBy(12.dp),
                     modifier = Modifier.weight(1f)
                 ) {
-                    items(paginatedDoctors) { doctor -> // 使用分页后的数据
+                    items(paginatedDoctors) { doctor ->
                         DoctorCard(
                             doctor = doctor,
-                            onSelect = {
-                                onDoctorSelected(doctor)
-                            }
+                            navController = navController
                         )
                     }
                 }

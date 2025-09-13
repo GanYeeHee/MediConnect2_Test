@@ -403,7 +403,7 @@ fun AppointmentScreen(navController: NavController) {
                                     items(filteredDoctors) { doctor ->
                                         DoctorCard(
                                             doctor = doctor,
-                                            onSelect = { onDoctorSelected(doctor) }
+                                            navController = navController // 只传递必要的参数
                                         )
                                     }
                                 }
@@ -530,7 +530,7 @@ fun SpecialtyCard(
 @Composable
 fun DoctorCard(
     doctor: Doctor,
-    onSelect: () -> Unit
+    navController: NavController // 移除 onSelect 参数
 ) {
     Card(
         modifier = Modifier
@@ -620,7 +620,10 @@ fun DoctorCard(
             Spacer(Modifier.height(12.dp))
 
             Button(
-                onClick = onSelect,
+                onClick = {
+                    // 直接在这里处理导航
+                    navController.navigate("confirm_booking/${doctor.id}")
+                },
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(48.dp),

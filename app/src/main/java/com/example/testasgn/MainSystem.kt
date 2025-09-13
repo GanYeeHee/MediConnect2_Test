@@ -55,6 +55,8 @@ import com.example.testasgn.ui.loginTheme.UserLoginScreen
 import com.example.testasgn.ui.theme.BalooTypography
 import com.example.testasgn.ui.userTheme.AppointmentScreen
 import com.example.testasgn.ui.userTheme.Bill
+import com.example.testasgn.ui.userTheme.BookingSuccessScreen
+import com.example.testasgn.ui.userTheme.ConfirmBookingScreen
 import com.example.testasgn.ui.userTheme.DoctorListScreen
 import com.example.testasgn.ui.userTheme.EditProfile
 import com.example.testasgn.ui.userTheme.History
@@ -567,6 +569,14 @@ fun MediConnectApp(
                             println("Selected doctor: ${doctor.name}")
                         }
                     )
+                }
+                composable("confirm_booking/{doctorId}") { backStackEntry ->
+                    val doctorId = backStackEntry.arguments?.getString("doctorId")?.toIntOrNull() ?: 1
+                    val doctor = sampleDoctors.find { it.id == doctorId } ?: sampleDoctors.first()
+                    ConfirmBookingScreen(navController = navController, doctor = doctor)
+                }
+                composable("booking_success") {
+                    BookingSuccessScreen(navController = navController)
                 }
             }
         }
