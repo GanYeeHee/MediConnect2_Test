@@ -93,10 +93,9 @@ val specialties = listOf(
     Specialty("endocrinology", "Endocrinology", Icons.Default.Science)
 )
 
-// 添加一个枚举类来表示当前显示的视图状态
 enum class ViewState {
-    SPECIALTIES, // 显示专业卡片
-    DOCTORS      // 显示医生卡片
+    SPECIALTIES,
+    DOCTORS
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -106,7 +105,6 @@ fun AppointmentScreen(navController: NavController) {
     var currentViewState by remember { mutableStateOf(ViewState.SPECIALTIES) }
     var doctorQuery by remember { mutableStateOf("") }
 
-    // 根据搜索查询过滤专业列表
     val filteredSpecialties = remember(query) {
         if (query.isBlank()) {
             specialties
@@ -117,10 +115,8 @@ fun AppointmentScreen(navController: NavController) {
         }
     }
 
-    // 随机排列医生列表
     val shuffledDoctors = remember { sampleDoctors.shuffled() }
 
-    // 根据搜索查询过滤医生列表
     val filteredDoctors = remember(doctorQuery) {
         if (doctorQuery.isBlank()) {
             shuffledDoctors
@@ -133,27 +129,22 @@ fun AppointmentScreen(navController: NavController) {
         }
     }
 
-    // 处理专业按钮点击
     val onSpecialtyButtonClick = {
         currentViewState = ViewState.SPECIALTIES
-        query = "" // 清空搜索框
+        query = ""
     }
 
-    // 处理医生按钮点击
     val onDoctorButtonClick = {
         currentViewState = ViewState.DOCTORS
-        doctorQuery = "" // 清空医生搜索框
+        doctorQuery = ""
     }
 
-    // 处理专业卡片点击 - 导航到该专业的医生列表
     val onSpecialtyCardClick = { specialty: Specialty ->
         currentViewState = ViewState.DOCTORS
-        doctorQuery = specialty.name // 自動填入專業，讓下方filter啟動
+        doctorQuery = specialty.name
     }
 
-    // 处理医生选择
     val onDoctorSelected = { doctor: Doctor ->
-        // 这里可以处理医生选择逻辑，比如导航到预约页面
         navController.navigate(Screen.DoctorListScreen.route)
     }
 
@@ -195,12 +186,10 @@ fun AppointmentScreen(navController: NavController) {
                         .weight(1f)
                         .padding(16.dp)
                 ) {
-                    // 按钮行
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceEvenly
                     ) {
-                        // 专业按钮
                         Button(
                             onClick = onSpecialtyButtonClick,
                             colors = ButtonDefaults.buttonColors(
@@ -221,7 +210,6 @@ fun AppointmentScreen(navController: NavController) {
                             )
                         }
 
-                        // 医生按钮
                         Button(
                             modifier = Modifier.border(1.dp, Color(0xFF00C8B3), RoundedCornerShape(40.dp)),
                             onClick = onDoctorButtonClick,
@@ -246,10 +234,8 @@ fun AppointmentScreen(navController: NavController) {
 
                     Spacer(modifier = Modifier.height(24.dp))
 
-                    // 根据当前视图状态显示不同内容
                     when (currentViewState) {
                         ViewState.SPECIALTIES -> {
-                            // 专业搜索框
                             OutlinedTextField(
                                 value = query,
                                 onValueChange = { query = it },
@@ -277,7 +263,6 @@ fun AppointmentScreen(navController: NavController) {
 
                             Spacer(modifier = Modifier.height(16.dp))
 
-                            // 显示搜索信息
                             if (query.isNotBlank()) {
                                 Text(
                                     text = "Search results for \"$query\" (${filteredSpecialties.size} found)",
@@ -294,7 +279,6 @@ fun AppointmentScreen(navController: NavController) {
                                 )
                             }
 
-                            // 专业卡片网格
                             if (filteredSpecialties.isEmpty() && query.isNotBlank()) {
                                 // 无搜索结果
                                 Column(
@@ -342,7 +326,6 @@ fun AppointmentScreen(navController: NavController) {
                         }
 
                         ViewState.DOCTORS -> {
-                            // 医生搜索框
                             OutlinedTextField(
                                 value = doctorQuery,
                                 onValueChange = { doctorQuery = it },
@@ -370,7 +353,6 @@ fun AppointmentScreen(navController: NavController) {
 
                             Spacer(modifier = Modifier.height(16.dp))
 
-                            // 显示医生搜索结果信息
                             if (doctorQuery.isNotBlank()) {
                                 Text(
                                     text = "Search results for \"$doctorQuery\" (${filteredDoctors.size} found)",
@@ -387,7 +369,6 @@ fun AppointmentScreen(navController: NavController) {
                                 )
                             }
 
-                            // 医生列表
                             if (filteredDoctors.isEmpty()) {
                                 Column(
                                     modifier = Modifier
@@ -431,7 +412,6 @@ fun AppointmentScreen(navController: NavController) {
                     }
                 }
 
-                // 底部导航栏保持不变
                 Box(
                     modifier = Modifier
                         .height(70.dp)

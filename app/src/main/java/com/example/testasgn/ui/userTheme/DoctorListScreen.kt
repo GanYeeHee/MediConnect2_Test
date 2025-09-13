@@ -240,14 +240,12 @@ fun DoctorListScreen(
 
 @Composable
 fun SimplePaginationBar(totalPages: Int, currentPage: Int, onPageClick: (Int) -> Unit) {
-    // 确保至少有1页
     if (totalPages <= 0) return
 
     Row(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.Center
     ) {
-        // 即使只有1页也显示页码
         for (page in 1..totalPages) {
             Button(
                 onClick = { onPageClick(page) },
